@@ -20,7 +20,7 @@ SQLDIR=${WORKING}/sql
 SCRIPTDIR=${WORKING}/scripts
 BAKDIR=${WORKING}/xtupledb
 
-DEPS='awscli jq s3cmd wget pwgen'
+DEPS='awscli jq s3cmd wget pwgen tree'
 DIRS='planin xtupledb route53 report scripts certs logs mail custlogs sql ini'
 
 #Setup Directories
