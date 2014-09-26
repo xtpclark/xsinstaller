@@ -65,11 +65,11 @@ cat << EOF > $SQLDIR/getpkgver.sql
 
 CREATE OR REPLACE FUNCTION public.getpkgver(text)
   RETURNS text AS
-$BODY$
+\$BODY\$
 -- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple.
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
-  pPkgName ALIAS FOR $1;
+  pPkgName ALIAS FOR \$1;
   _returnVal TEXT;
 BEGIN
   IF (pPkgName IS NULL) THEN
@@ -86,7 +86,7 @@ BEGIN
 
   RETURN _returnVal;
 END;
-$BODY$
+\$BODY\$
   LANGUAGE plpgsql VOLATILE;
 ALTER FUNCTION public.getpkgver(text)
   OWNER TO admin;
@@ -164,7 +164,7 @@ xtupleserverchk()
 {
 echo "Checking xtuple-server dependencies"
 
-XTCHK='xtupled xtuple-server npm n psql'
+XTCHK='xtupled xtuple-server npm n psql nginx'
 
 for PART in $XTCHK; do
 
@@ -175,9 +175,17 @@ echo "Do you want to run bootstrap, etc? Need a BIG 'YES' here..."
 read FIXSERVER
 case $FIXSERVER in
 YES)
-wget xtuple.com/bootstrap -qO- | sudo bash
-npm install -fg xtuple-server-commercial
-sudo xtuple-server setup
+
+BSCMD="wget --quiet -O ${DIR}/bootstrap.sh http://www.xtuple.com/bootstrap"
+GETBS=`$BSCMD`
+chmod 755 ${DIR}/bootstrap.sh
+RUNBS=`sudo ${DIR}/bootstrap.sh`
+
+NPMCMD="npm install -fg xtuple-server-commercial"
+RUNNPM=`$NPMCMD`
+
+XSETUPCMD="sudo xtuple-server setup"
+RUNXS=`$XSETUPCMD`
 ;;
 *)
 echo "Nope..."
