@@ -176,7 +176,7 @@ read FIXSERVER
 case $FIXSERVER in
 YES)
 wget xtuple.com/bootstrap -qO- | sudo bash
-npm install -g xtuple-server-commercial
+npm install -fg xtuple-server-commercial
 sudo xtuple-server setup
 ;;
 *)
