@@ -5,8 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 echo "working dir is $DIR"
 
-
-setup()
+enviro()
 {
 WORKING=$DIR
 RT53SET=${WORKING}/ini/rt53settings.ini
@@ -19,6 +18,31 @@ CUSTLOGDIR=${WORKING}/custlogs
 SQLDIR=${WORKING}/sql
 SCRIPTDIR=${WORKING}/scripts
 BAKDIR=${WORKING}/xtupledb
+}
+
+pre()
+{
+enviro
+echo "Checking environment"
+if [ ! -f ~/.xsinstaller ]
+then
+echo "Writing .xsinstaller"
+touch ~/.xsinstaller
+setup
+echo "Checking environment again"
+pre
+else
+enviro
+echo "Set Env"
+fi
+}
+
+
+
+
+
+setup()
+{
 
 DEPS='awscli jq s3cmd wget pwgen tree'
 DIRS='planin xtupledb route53 report scripts certs logs mail custlogs sql ini'
@@ -46,6 +70,7 @@ echo ""
 sqlchk
 echo ""
 setrt53
+echo""
 echo "We can get to work now."
 echo ""
 }
@@ -245,6 +270,7 @@ XTADMIN=admin
 banner(){
 echo "Hi there ${USER} ! This will create a new customer db and mobilize it!"
 }
+
 
 setcust(){
 echo "Enter Customer (xTuple CRM Account Number)"
@@ -549,9 +575,8 @@ EOF
 
 }
 
-
+pre
 banner
-setup
 setcust
 setver
 getback
