@@ -3,7 +3,7 @@
 # set -eu
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
-echo "working dir is $DIR"
+echo "Working dir is $DIR"
 
 enviro()
 {
@@ -36,10 +36,6 @@ enviro
 echo "Set Env"
 fi
 }
-
-
-
-
 
 setup()
 {
