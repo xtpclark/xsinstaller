@@ -318,6 +318,8 @@ settype()
 {
 CMD="sudo xtuple-server"
 PARAM="install-"
+
+echo "Select the type of installation"
 PS3="Select an Installation Type: "
 TYPES='pilot live'
 
@@ -740,8 +742,8 @@ EOF
 
 pre
 banner
-setcust
 settype
+setcust
 getback
 renamedb
 setver
