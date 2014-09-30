@@ -2,7 +2,7 @@
 
 
 <h3>Purpose:</h3>
-This is a wrapper for the xtuple-server CLI modes to generate the long list of parameters needed to create an xTuple Server Instance. 
+This is a wrapper for the xtuple-server install-TYPE cli modes to generate the long list of parameters needed to create an xTuple Server Instance.
 
 <h3>Things it does:</h3>
 * Sets up your xtuple-server following the steps in the quickstart guide on the xtuple-server wiki.
@@ -16,6 +16,16 @@ This is a wrapper for the xtuple-server CLI modes to generate the long list of p
 * Reads an ini file if using the same parameters in a shared environment
 * Stores an install/uninstall script for instances you create.
 * Allows you to preview the parameters list and optionally execute or change it.
+* Keeps you from typing or remembering a lot of parameters (so doesn't the webmin interface, but this is less typing than that.)
+
+<h3>Things it does NOT do: (yet)</h3>
+* Does not use node (it's just dumb bash)
+* Does not uninstall (but does store an uninstall script which you can poke manually)
+* Does not set up cron/backups (yet)
+* Does not read a database or receive JSON to get parameters for xtuple-sever (yet)
+* Does not restore-database (but you can put your .backup in the xtupledb dir and choose it)
+* Does not offer every option to xtuple-server install-TYPE (yet, mostly avoids the obscure things)
+* Fold laundry, or make your lunch, etc.
 
 <h3>Usage:</h3>
 Starting from a fresh server install that is supported by xtuple-server (Ubuntu 12.x/14.x), grab this script, run it as a normal user and follow the prompts.
