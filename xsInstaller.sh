@@ -693,6 +693,18 @@ startnode()
 sudo service xtuple start
 }
 
+lickey()
+{
+echo "Enter license key if you have one"
+read LIC
+if [ -z $LIC ]; then
+skipping
+else
+echo "Using $LIC"
+LICSQL="UPDATE metric SET metric_value=\'${LIC}\' WHERE metric_name=\'RegistrationKey\';"
+fi
+}
+
 dbcleanup()
 {
 NEWPORTLIST=`pg_lsclusters -h`
@@ -703,6 +715,12 @@ PGCMD="psql -At -U ${XTADMIN} -p ${CUSTPORT} ${DB} "
 
 echo "Adding All Extensions to admin user"
 ${PGCMD} -c "SELECT xt.js_init(); DELETE FROM xt.usrext WHERE usrext_usr_username='${XTADMIN}'; INSERT INTO xt.usrext(usrext_usr_username,usrext_ext_id) SELECT '${XTADMIN}', ext_id FROM xt.ext;"
+
+if [ -z $LICSQL ]; then
+true
+else
+${PGCMD} -c "${LICSQL}"
+fi
 
 
 $PGCMD -q < $SQLDIR/getpkgver.sql
@@ -751,6 +769,7 @@ setedition
 setpass
 setghuserpass
 setpgport
+lickey
 xtauthkey
 checkdns
 setssl
