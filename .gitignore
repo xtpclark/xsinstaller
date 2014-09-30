@@ -1,0 +1,7 @@
+certs/
+route53/
+scripts/
+sql/
+xtuple-server-report.log
+xtupledb/
+
