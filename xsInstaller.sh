@@ -33,6 +33,7 @@ echo "Checking environment again"
 pre
 else
 enviro
+setrt53
 echo "Set Env"
 fi
 }
@@ -601,6 +602,26 @@ done
 
 }
 
+checkdns()
+{
+PARAM="--nginx-domain"
+XTFQDN="${XTCRMACCT}.${XTDOMAIN}"
+XTFQDN="$(echo ${XTFQDN} | tr '[A-Z]' '[a-z]')"
+
+DNSEXISTS=`getent hosts ${XTFQDN}`
+if [[ -n ${DNSEXISTS} ]]
+then
+      echo "${XTFQDN} exists already"
+      true
+else
+echo "${XTFQDN} Does Not Exist  - creating"
+makedns
+dodns
+fi
+PARAM="${PARAM} \"${XTFQDN}\""
+CMD+=" ${PARAM}"
+}
+
 makedns()
 {
 RT53JSON=${RT53DIR}/create_${XTCRMACCT}_rt53.json
@@ -629,26 +650,6 @@ echo ${RT53DELCMD} > ${UNSCRIPT}
 
 }
 
-
-checkdns()
-{
-PARAM="--nginx-domain"
-XTFQDN="${XTCRMACCT}.${XTDOMAIN}"
-XTFQDN="$(echo ${XTFQDN} | tr '[A-Z]' '[a-z]')"
-
-DNSEXISTS=`getent hosts ${XTFQDN}`
-if [[ -n ${DNSEXISTS} ]]
-then
-      echo "${XTFQDN} exists already"
-      true
-else
-echo "${XTFQDN} Does Not Exist  - creating"
-makedns
-dodns
-fi
-PARAM="${PARAM} \"${XTFQDN}\""
-CMD+=" ${PARAM}"
-}
 
 pgversion()
 {
@@ -698,7 +699,7 @@ lickey()
 echo "Enter license key if you have one"
 read LIC
 if [ -z $LIC ]; then
-skipping
+echo "skipping"
 else
 echo "Using $LIC"
 LICSQL="UPDATE metric SET metric_value=\'${LIC}\' WHERE metric_name=\'RegistrationKey\';"
