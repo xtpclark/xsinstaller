@@ -8,7 +8,7 @@ echo "Working dir is $DIR"
 enviro()
 {
 WORKING=$DIR
-RT53SET=${WORKING}/ini/rt53settings.ini
+SETS=${WORKING}/ini/settings.ini
 PLAN=${WORKING}/planin
 CERTDIR=${WORKING}/certs
 MIG=${WORKING}/xtupledb
@@ -79,7 +79,7 @@ then
 echo "File exists"
 else
 echo "Creating getpkgver.sql"
-cat << EOF > $SQLDIR/getpkgver.sql
+cat << EOF > ${SQLDIR}/getpkgver.sql
 -- Function: public.getpkgver(text)
 
 -- DROP FUNCTION public.getpkgver(text);
@@ -222,12 +222,12 @@ echo "Looks good. Found: ${XTCHK}!"
 setrt53()
 {
 echo "Checking Route53 Settings"
-if [ -e $RT53SET ]
+if [ -e $SETS ]
  then
-  echo "${RT53SET} Exists, reading settings"
-   XTDOMAIN=`grep XTDOMAIN ${RT53SET} | cut -d':' -f2`
-   AWSDNSALIAS=`grep AWSDNSALIAS ${RT53SET} | cut -d':' -f2`
-   AWSZONEID=`grep AWSZONEID ${RT53SET} | cut -d':' -f2`
+  echo "${SETS} Exists, reading settings"
+   XTDOMAIN=`grep XTDOMAIN ${SETS} | cut -d':' -f2`
+   AWSDNSALIAS=`grep AWSDNSALIAS ${SETS} | cut -d':' -f2`
+   AWSZONEID=`grep AWSZONEID ${SETS} | cut -d':' -f2`
 echo "Using: $XTDOMAIN $AWSDNSALIAS $AWSZONEID"
  else 
 
@@ -245,18 +245,41 @@ read AWSDNSALIAS
  echo "i.e. ZEEBEEDEEDOODAH"
 read AWSZONEID
 
-cat << EOF > $RT53SET
+cat << EOF > $SETS
 XTDOMAIN:${XTDOMAIN}
 AWSDNSALIAS:${AWSDNSALIAS}
 AWSZONEID:${AWSZONEID}
 EOF
 
-echo "Wrote: ${RT53SET}"
+echo "Wrote: ${SETS}"
 echo "XTDOMAIN:${XTDOMAIN}"
 echo "AWSDNSALIAS:${AWSDNSALIAS}"
 echo "AWSZONEID:${AWSZONEID}"
 fi
 }
+
+settype()
+{
+CMD="sudo xtuple-server"
+PARAM="install-"
+PS3="Select an Installation Type: "
+TYPES='pilot live'
+
+select TYPE in ${TYPES};
+do
+ echo "You picked $TYPE ($REPLY)"
+ break
+done
+
+if [ -z $TYPE ]; then
+echo "Select a type!"
+clear
+settype
+fi
+PARAM="${PARAM}${TYPE}"
+CMD+=" ${PARAM}"
+}
+
 
 
 
@@ -269,6 +292,7 @@ echo "Hi there ${USER} ! This will create a new customer db and mobilize it!"
 
 
 setcust(){
+PARAM="--xt-name"
 echo "Enter Customer (xTuple CRM Account Number)"
 read CUST
 CUST="$(echo ${CUST} | tr '[A-Z]' '[a-z]')"
@@ -284,6 +308,9 @@ CUSTLOG=${CUSTLOGDIR}/${CUST}.log
 fi
 INSCRIPT=${SCRIPTDIR}/${CUST}_installer.sh
 UNSCRIPT=${SCRIPTDIR}/${CUST}_uninstaller.sh
+
+PARAM="${PARAM} \"${CUST}\""
+CMD+=" ${PARAM}"
 }
 
 setxtuser()
@@ -293,30 +320,40 @@ XTUSER=admin
 
 setpass()
 {
+PARAM="--xt-adminpw"
 echo "Set Admin Password (or empty to generate)"
 read XTPASS
 if [ -z  $XTPASS ]; then
 XTPASS=`pwgen -1`
-## XTPASS=xTuple\!PrivateDemo2014
 echo "using $XTPASS "
 else
 XTPASS=$XTPASS
 echo "using $XTPASS "
 fi
+PARAM="${PARAM} \"${XTPASS}\""
+CMD+=" ${PARAM}"
 }
 
 setghuserpass()
 {
+PARAM="--xt-ghuser"
 echo "Set Github User/Pass"
 echo "Enter Username:"
 read GHUSER
+PARAM=" ${PARAM} \"${GHUSER}\""
+CMD+=" ${PARAM}"
+
+PARAM="--xt-ghpass"
 echo "Enter Password:"
 read GHPASS
 echo "Using ${GHUSER}/${GHPASS}"
+PARAM=" ${PARAM} \"${GHPASS}\""
+CMD+=" ${PARAM}"
 }
 
 setver()
 {
+PARAM="--xt-version"
 PS3="Select an xTuple Version: "
 TAGS=`git ls-remote --tags git://github.com/xtuple/xtuple.git | tail -10 | cut -d '/' -f 3 | cut -d v -f2`
 
@@ -327,16 +364,16 @@ do
  break
 done
 
-#echo "Enter Version (default 4.6.0-1)"
-#read XTVER
-
 if [ -z $XTVER ]; then
 XTVER=4.6.0-1
 echo "using $XTVER"
+
 else
 XTVER=$XTVER
 echo "using $XTVER"
 fi
+PARAM="$PARAM \"${XTVER}\""
+CMD+=" $PARAM"
 }
 
 
@@ -363,6 +400,7 @@ fi
 
 renamedb()
 {
+PARAM="--pg-maindb"
 echo "Selected $CUSTDB to use as a template."
 echo "We're going to symlink the name to it."
 echo "Enter a name to call this, or use $CUST as a default name."
@@ -384,35 +422,90 @@ CUSTDB=${MIG}/${NEWDBNAME}
 fi
 echo "$CUSTDB Symlinked "
 echo "using $NEWDBNAME as template"
+PARAM="${PARAM} \"${CUSTDB}\""
+echo "${PARAM}"
+CMD+=" ${PARAM}"
 }
 
 
-settype()
+setpgport()
 {
-PS3="Select an Installation Type for $CUSTDB: "
-TYPES='pilot live'
-
-select TYPE in ${TYPES};
-do
- echo "You picked $TYPE ($REPLY)"
- break
-done
-
-if [ -z $TYPE ]; then
-echo "Select a type!"
-clear
-settype
+PARAM="--pg-port"
+echo "Set a PostgreSQL Port to bind this install to (--pg-port [integer])"
+echo "Or press any-key to select next port automatically"
+read XSPGPORT
+if [ -z $XSPGPORT ]; then
+echo "Using next available pg-port"
+else
+XSPGPORT=${XSPGPORT}
+PARAM="${PARAM} \"${XSPGPORT}\""
+echo "${PARAM}"
+CMD+=" ${PARAM}"
 fi
 }
 
+setpgworldlogin()
+{
+PARAM="--pg-worldlogin"
+echo "Set if postgres should allow world md5 login (--pg-worldlogin [boolean])"
+echo "Press any-key to accept default (TRUE)"
+PS3="Select true/false: "
+OPTS='true false'
+select OPT in $OPTS;
+do
+echo "You selected $OPT ($REPLY)"
+break
+done;
+
+case $OPT in
+true)
+XSPGWORLD="1"
+;;
+false)
+XSPGWORLD="0"
+;;
+esac
+echo "Using: ${PARAM} \"${XSPGWORLD}\"" 
+PARAM=" ${PARAM} \"${XSPGWORLD}\""
+CMD+=" ${PARAM}"
+}
+
+xtauthkey()
+{
+PARAM="--xt-authkey"
+echo "Set the xTuple Authkey to use"
+echo "This should match what the QT Client"
+echo "is using for Credit Card hashing"
+echo "Press any key for default"
+read XSAUTHKEY
+if [ -z $XSAUTHKEY ]; then
+XSAUTHKEY="xTuple"
+else
+XSAUTHKEY="${XSAUTHKEY}"
+fi
+echo "Using: ${PARAM} \"${XSAUTHKEY}\""
+PARAM=" ${PARAM} \"${XSAUTHKEY}\""
+CMD+=" ${PARAM}"
+}
+
+settypeopts()
+case $TYPE in
+live)
+
+;;
+esac
+
 setedition()
 {
+PARAM="--xt-edition"
 PS3="Set the xTuple Edition: "
 EDITIONS='enterprise standard postbooks'
 
 select EDITION in ${EDITIONS};
 do
  echo "You picked $EDITION ($REPLY)"
+ PARAM="${PARAM} \"${EDITION}\""
+ CMD+=" $PARAM"
  break
 done
 
@@ -425,6 +518,7 @@ fi
 
 setssl()
 {
+PARAM="--nginx-incrt"
 echo "Set the SSL Cert and Key"
 PS3="Select the SSL Cert: "
 CERTS=`ls $CERTDIR/*.crt`
@@ -432,10 +526,16 @@ KEYS=`ls $CERTDIR/*.key`
 select CERT in ${CERTS};
  do
   echo "Selected $CERT"
+PARAM="${PARAM} \"${CERT}\""
+CMD+=" ${PARAM}"
+
+PARAM="--nginx-inkey"
    PS3="Select the Key: "
    select KEY in ${KEYS};
     do
      echo "Selected $KEY"
+PARAM="${PARAM} \"${KEY}\""
+CMD+=" ${PARAM}"
    break
   done
  break
@@ -466,19 +566,20 @@ RT53ADDCMD=`${RT53ADD}`
 RT53DEL="aws route53 change-resource-record-sets --hosted-zone-id ${AWSZONEID} --change-batch file://${RT53JSON_DELETE}"
 ##RT53DELCMD=`RT53DEL`
 
-echo ${RT53ADDCMD} >> ${INSCRIPT}
-echo ${RT53DELCMD} >> ${UNSCRIPT}
+echo ${RT53ADDCMD} > ${INSCRIPT}
+echo ${RT53DELCMD} > ${UNSCRIPT}
 
 }
 
 
 checkdns()
 {
-XTFQDN=${XTCRMACCT}.${XTDOMAIN}
+PARAM="--nginx-domain"
+XTFQDN="${XTCRMACCT}.${XTDOMAIN}"
 XTFQDN="$(echo ${XTFQDN} | tr '[A-Z]' '[a-z]')"
 
 DNSEXISTS=`getent hosts ${XTFQDN}`
-if [[ -n "$DNSEXISTS" ]]
+if [[ -n ${DNSEXISTS} ]]
 then
       echo "${XTFQDN} exists already"
       true
@@ -487,35 +588,45 @@ echo "${XTFQDN} Does Not Exist  - creating"
 makedns
 dodns
 fi
-
+PARAM="${PARAM} \"${XTFQDN}\""
+CMD+=" ${PARAM}"
 }
 
+pgversion()
+{
+PARAM="--pg-version"
+PGVER="9.3"
+PARAM="${PARAM} \"${PGVER}\""
+CMD+=" $PARAM"
+}
 
 previewruncmd()
 {
-echo "Here is your Command Preview:
-sudo xtuple-server install-${TYPE}
---xt-name ${CUST} --xt-version ${XTVER} --xt-edition enterprise
---xt-ghuser ${GHUSER} --xt-ghpass ${GHPASS} --xt-maindb ${CUSTDB}
---xt-authkey xTuple --xt-adminpw ${XTPASS}
---nginx-domain ${XTFQDN}
---nginx-incrt ${CERT}
---nginx-inkey ${KEY}
---pg-worldlogin --pg-version 9.3"
+echo "
+Here is your Command Preview:
+${CMD}"
 
-INSTALLCMD="sudo xtuple-server install-${TYPE} --xt-name ${CUST} --xt-version ${XTVER} --xt-edition ${EDITION} --xt-ghuser ${GHUSER} --xt-ghpass ${GHPASS} --xt-maindb ${CUSTDB} --xt-authkey xTuple --xt-adminpw ${XTPASS} --nginx-domain ${XTFQDN}  --nginx-incrt ${CERT} --nginx-inkey ${KEY}  --pg-worldlogin --pg-version 9.3"
+#sudo xtuple-server install-${TYPE}
+#--xt-name ${CUST} --xt-version ${XTVER} --xt-edition enterprise
+#--xt-ghuser ${GHUSER} --xt-ghpass ${GHPASS} --xt-maindb ${CUSTDB}
+#--xt-authkey xTuple --xt-adminpw ${XTPASS}
+#--nginx-domain ${XTFQDN}
+#--nginx-incrt ${CERT}
+#--nginx-inkey ${KEY}
+#--pg-worldlogin --pg-version 9.3"
+
+#INSTALLCMD="sudo xtuple-server install-${TYPE} --xt-name ${CUST} --xt-version ${XTVER} --xt-edition ${EDITION} --xt-ghuser ${GHUSER} --xt-ghpass ${GHPASS} --xt-maindb ${CUSTDB} --xt-authkey xTuple --xt-adminpw ${XTPASS} --nginx-domain ${XTFQDN}  --nginx-incrt ${CERT} --nginx-inkey ${KEY}  --pg-worldlogin --pg-version 9.3"
 UNINSTALLCMD="sudo xtuple-server uninstall-${TYPE} --xt-name ${CUST} --xt-version ${XTVER} --xt-edition ${EDITION} --xt-adminpw ${XTPASS} --nginx-domain ${XTFQDN} --pg-version 9.3"
 
-echo ${INSTALLCMD} >> ${INSCRIPT}
+echo ${CMD} >> ${INSCRIPT}
 echo ${UNINSTALLCMD} >> ${UNSCRIPT}
 
 }
 
 runcmd()
 {
-run_cmd=`$INSTALLCMD` | grep 'info sys-report' | cut -d' ' -f4-100 >> ${CUSTLOG}
-
-#sudo xtuple-server rename-database pilot --xt-name firetrucks --xt-version 4.6.0-1  --xt-edition enterprise --pg-dbname masterref_460_pilot --pg-newname firetrucks_pilot
+#run_cmd=`$INSTALLCMD` | grep 'info sys-report' | cut -d' ' -f4-100 >> ${CUSTLOG}
+run_cmd=`$CMD` | grep 'info sys-report' | cut -d' ' -f4-100 >> ${CUSTLOG}
 
 }
 
@@ -570,6 +681,23 @@ $XTDETAIL
 EOF
 
 }
+
+pre
+banner
+settype
+setcust
+setver
+setedition
+setpass
+setghuserpass
+setpgport
+xtauthkey
+checkdns
+setssl
+setpgworldlogin
+pgversion
+previewruncmd
+exit 0;
 
 pre
 banner
