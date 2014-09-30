@@ -8,14 +8,19 @@ This is a wrapper for the xtuple-server install-TYPE cli modes to generate the l
 * Sets up your xtuple-server following the steps in the quickstart guide on the xtuple-server wiki.
 * Grabs a postbooks db
 * creates a key/cert 
+* Lists xtuple.git version tags available to select
+* Allows you to specify the pg-port to bind to
+* Sets/or selects(wip) your authKey
 * Checks that the xtuple-server has needed files/services (xtuple-server, nginx, etc)
 * Adds support and configures AWSCLI and S3CMD to populate Route53 DNS and grab files or put backups in an S3 Bucket (WIP).
 * Creates directory structure for containing the files it needs
 * Prompts you through the instance creation process and explains itself (mostly)
-* Generates a report that can be auto-mailed to end users with details of their service
+* Generates a report that can be auto-mailed to end users with details of their service (packages, versions, etc)
 * Reads an ini file if using the same parameters in a shared environment
 * Stores an install/uninstall script for instances you create.
 * Allows you to preview the parameters list and optionally execute or change it.
+* Adds all mobile extensions to the Admin user
+* Allows you to set the License Key (or not) (WIP)
 * Keeps you from typing or remembering a lot of parameters (so doesn't the webmin interface, but this is less typing than that.)
 
 <h3>Things it does NOT do: (yet)</h3>
