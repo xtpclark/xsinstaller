@@ -185,7 +185,8 @@ xtupleserverchk()
 {
 echo "Checking xtuple-server dependencies"
 
-XTCHK='xtupled xtuple-server npm n psql nginx'
+# XTCHK='xtupled xtuple-server npm n psql nginx'
+XTCHK='xtuplesd'
 
 for PART in $XTCHK; do
 
@@ -196,17 +197,44 @@ echo "Do you want to run bootstrap, etc? Need a BIG 'YES' here..."
 read FIXSERVER
 case $FIXSERVER in
 YES)
-
+echo "Run Bootstrap? [ YES | NO ]"
+read BOOTSTRAP
+case $BOOTSTRAP in
+YES)
 BSCMD="wget --quiet -O ${DIR}/bootstrap.sh http://www.xtuple.com/bootstrap"
 GETBS=`$BSCMD`
 chmod 755 ${DIR}/bootstrap.sh
 RUNBS=`sudo ${DIR}/bootstrap.sh`
+;;
+NO)
+echo "Skipping Bootstrap"
+;;
+esac
 
+echo "Run NPM Install? [ YES | NO ]"
+read NPMINSTALL
+case $NPMINSTALL in
+YES)
 NPMCMD="npm install -fg xtuple-server-commercial"
 RUNNPM=`$NPMCMD`
+;;
+NO)
+echo "Skipping NPM Install"
+;;
+esac
 
+echo "Run xtuple-server setup? [ YES | NO ]"
+read XSSETUP
+case $XSSETUP in
+YES)
 XSETUPCMD="sudo xtuple-server setup"
 RUNXS=`$XSETUPCMD`
+;;
+NO)
+echo "Skipping xtuple-server Setup"
+;;
+esac
+
 ;;
 *)
 echo "Nope..."
@@ -391,7 +419,7 @@ do
 done
 
 if [ -z $CUSTDB ]; then
-echo "You need to enter something/someone!"
+echo "You need to enter something!"
 sleep 2
 clear
 getback
@@ -400,7 +428,7 @@ fi
 
 renamedb()
 {
-PARAM="--pg-maindb"
+PARAM="--xt-maindb"
 echo "Selected $CUSTDB to use as a template."
 echo "We're going to symlink the name to it."
 echo "Enter a name to call this, or use $CUST as a default name."
@@ -684,8 +712,10 @@ EOF
 
 pre
 banner
-settype
 setcust
+settype
+getback
+renamedb
 setver
 setedition
 setpass
@@ -727,8 +757,8 @@ exit 0;
 esac
 
 echo "Starting node, adding extensions, making report"
-startnode
-dbcleanup
-makereport
+#startnode
+#dbcleanup
+#makereport
 
 exit 0;
