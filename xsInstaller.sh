@@ -135,13 +135,42 @@ then
 echo "Found AWS-CLI config: ~/.aws/config"
 else
 echo "AWS Commands won't work! You should create ~/.aws/config"
-fi
+echo "Do you want to run aws configure ?"
+OPTS='yes no'
+  select OPT in $OPTS
+    do
+       if [ $OPT = 'yes' ]
+        then
+        aws configure
+        break
+         else
+        echo "leaving"
+        break 
+     fi
+     done
+
+ fi
 
 if [ -f ~/.s3cfg ]
 then
 echo "Found s3cmd config: ~/.s3cfg"
 else
-echo "AWS s3cmd won't work! You should create ~/.s3cfg (Run s3cmd --configure)"
+echo "AWS s3cmd won't work! You should create ~/.s3cfg (Run s3cmd --configure ?)"
+OPTS='yes no'
+  select OPT in $OPTS
+    do
+       if [ $OPT = 'yes' ]
+        then
+        s3cmd  --configure
+        break
+         else
+        echo "leaving"
+        break 
+     fi
+     done
+
+
+
 fi
 
 }
@@ -185,8 +214,7 @@ xtupleserverchk()
 {
 echo "Checking xtuple-server dependencies"
 
-# XTCHK='xtupled xtuple-server npm n psql nginx'
-XTCHK='xtuplesd'
+XTCHK='xtupled xtuple-server npm n psql nginx'
 
 for PART in $XTCHK; do
 
