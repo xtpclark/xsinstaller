@@ -1,3 +1,6 @@
+*.log
+report/
+custlogs/
 ini/
 certs/
 route53/

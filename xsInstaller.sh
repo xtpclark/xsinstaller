@@ -368,7 +368,7 @@ fi
 INSCRIPT=${SCRIPTDIR}/${CUST}_installer.sh
 UNSCRIPT=${SCRIPTDIR}/${CUST}_uninstaller.sh
 
-PARAM="${PARAM} \"${CUST}\""
+PARAM="${PARAM} ${CUST}"
 CMD+=" ${PARAM}"
 }
 
@@ -389,7 +389,7 @@ else
 XTPASS=$XTPASS
 echo "using $XTPASS "
 fi
-PARAM="${PARAM} \"${XTPASS}\""
+PARAM="${PARAM} ${XTPASS}"
 CMD+=" ${PARAM}"
 }
 
@@ -399,14 +399,14 @@ PARAM="--xt-ghuser"
 echo "Set Github User/Pass"
 echo "Enter Username:"
 read GHUSER
-PARAM=" ${PARAM} \"${GHUSER}\""
+PARAM=" ${PARAM} ${GHUSER}"
 CMD+=" ${PARAM}"
 
 PARAM="--xt-ghpass"
 echo "Enter Password:"
 read GHPASS
 echo "Using ${GHUSER}/${GHPASS}"
-PARAM=" ${PARAM} \"${GHPASS}\""
+PARAM=" ${PARAM} ${GHPASS}"
 CMD+=" ${PARAM}"
 }
 
@@ -431,7 +431,7 @@ else
 XTVER=$XTVER
 echo "using $XTVER"
 fi
-PARAM="$PARAM \"${XTVER}\""
+PARAM="$PARAM ${XTVER}"
 CMD+=" $PARAM"
 }
 
@@ -481,7 +481,7 @@ CUSTDB=${MIG}/${NEWDBNAME}
 fi
 echo "$CUSTDB Symlinked "
 echo "using $NEWDBNAME as template"
-PARAM="${PARAM} \"${CUSTDB}\""
+PARAM="${PARAM} ${CUSTDB}"
 echo "${PARAM}"
 CMD+=" ${PARAM}"
 }
@@ -497,7 +497,7 @@ if [ -z $XSPGPORT ]; then
 echo "Using next available pg-port"
 else
 XSPGPORT=${XSPGPORT}
-PARAM="${PARAM} \"${XSPGPORT}\""
+PARAM="${PARAM} ${XSPGPORT}"
 echo "${PARAM}"
 CMD+=" ${PARAM}"
 fi
@@ -524,8 +524,8 @@ false)
 XSPGWORLD="0"
 ;;
 esac
-echo "Using: ${PARAM} \"${XSPGWORLD}\"" 
-PARAM=" ${PARAM} \"${XSPGWORLD}\""
+echo "Using: ${PARAM} ${XSPGWORLD}" 
+PARAM=" ${PARAM} ${XSPGWORLD}"
 CMD+=" ${PARAM}"
 }
 
@@ -542,8 +542,8 @@ XSAUTHKEY="xTuple"
 else
 XSAUTHKEY="${XSAUTHKEY}"
 fi
-echo "Using: ${PARAM} \"${XSAUTHKEY}\""
-PARAM=" ${PARAM} \"${XSAUTHKEY}\""
+echo "Using: ${PARAM} ${XSAUTHKEY}"
+PARAM=" ${PARAM} ${XSAUTHKEY}"
 CMD+=" ${PARAM}"
 }
 
@@ -563,7 +563,7 @@ EDITIONS='enterprise standard postbooks'
 select EDITION in ${EDITIONS};
 do
  echo "You picked $EDITION ($REPLY)"
- PARAM="${PARAM} \"${EDITION}\""
+ PARAM="${PARAM} ${EDITION}"
  CMD+=" $PARAM"
  break
 done
@@ -585,7 +585,7 @@ KEYS=`ls $CERTDIR/*.key`
 select CERT in ${CERTS};
  do
   echo "Selected $CERT"
-PARAM="${PARAM} \"${CERT}\""
+PARAM="${PARAM} ${CERT}"
 CMD+=" ${PARAM}"
 
 PARAM="--nginx-inkey"
@@ -593,7 +593,7 @@ PARAM="--nginx-inkey"
    select KEY in ${KEYS};
     do
      echo "Selected $KEY"
-PARAM="${PARAM} \"${KEY}\""
+PARAM="${PARAM} ${KEY}"
 CMD+=" ${PARAM}"
    break
   done
@@ -618,7 +618,7 @@ echo "${XTFQDN} Does Not Exist  - creating"
 makedns
 dodns
 fi
-PARAM="${PARAM} \"${XTFQDN}\""
+PARAM="${PARAM} ${XTFQDN}"
 CMD+=" ${PARAM}"
 }
 
@@ -655,7 +655,7 @@ pgversion()
 {
 PARAM="--pg-version"
 PGVER="9.3"
-PARAM="${PARAM} \"${PGVER}\""
+PARAM="${PARAM} ${PGVER}"
 CMD+=" $PARAM"
 }
 
@@ -777,21 +777,6 @@ setssl
 setpgworldlogin
 pgversion
 previewruncmd
-exit 0;
-
-pre
-banner
-setcust
-setver
-getback
-renamedb
-settype
-setedition
-setpass
-setghuserpass
-checkdns
-setssl
-previewruncmd
 
 echo "Do you want to run it actually?"
 read RUNIT
@@ -799,6 +784,9 @@ case $RUNIT in
 Y|y)
 echo "Ok, Running..."
 runcmd
+startnode
+dbcleanup
+makereport
 ;;
 *)
 echo "Not Gonna do it!"
@@ -807,8 +795,5 @@ exit 0;
 esac
 
 echo "Starting node, adding extensions, making report"
-#startnode
-#dbcleanup
-#makereport
 
 exit 0;
