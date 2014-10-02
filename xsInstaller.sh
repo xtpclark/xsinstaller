@@ -1,9 +1,12 @@
 #!/bin/bash
 #set -vx
 # set -eu
+EDITOR=vi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 echo "Working dir is $DIR"
+
+WORKDATE=`/bin/date "+%m%d%y_%s"`
 
 enviro()
 {
@@ -285,7 +288,12 @@ if [ -e $SETS ]
    XTDOMAIN=`grep XTDOMAIN ${SETS} | cut -d':' -f2`
    AWSDNSALIAS=`grep AWSDNSALIAS ${SETS} | cut -d':' -f2`
    AWSZONEID=`grep AWSZONEID ${SETS} | cut -d':' -f2`
-echo "Using: $XTDOMAIN $AWSDNSALIAS $AWSZONEID"
+   MTO=`grep MTO ${SETS} | cut -d':' -f2`
+
+export EMAIL=xsinstaller@${AWSDNSALIAS}
+
+
+echo "Using: $XTDOMAIN $AWSDNSALIAS $AWSZONEID, sending emails to ${MTO}"
  else 
 
 
@@ -302,16 +310,22 @@ read AWSDNSALIAS
  echo "i.e. ZEEBEEDEEDOODAH"
 read AWSZONEID
 
+ echo "Set an Email address to send the install report to"
+ echo "i.e. admin@example.com"
+read MTO
+
 cat << EOF > $SETS
 XTDOMAIN:${XTDOMAIN}
 AWSDNSALIAS:${AWSDNSALIAS}
 AWSZONEID:${AWSZONEID}
+MTO:${MTO}
 EOF
 
 echo "Wrote: ${SETS}"
 echo "XTDOMAIN:${XTDOMAIN}"
 echo "AWSDNSALIAS:${AWSDNSALIAS}"
 echo "AWSZONEID:${AWSZONEID}"
+echo "MTO:${MTO}"
 fi
 }
 
@@ -363,10 +377,10 @@ clear
 setcust
 else
 echo "Using $CUST"
-CUSTLOG=${CUSTLOGDIR}/${CUST}.log
+CUSTLOG=${CUSTLOGDIR}/${CUST}_${WORKDATE}.log
 fi
-INSCRIPT=${SCRIPTDIR}/${CUST}_installer.sh
-UNSCRIPT=${SCRIPTDIR}/${CUST}_uninstaller.sh
+INSCRIPT=${SCRIPTDIR}/${CUST}_${WORKDATE}_installer.sh
+UNSCRIPT=${SCRIPTDIR}/${CUST}_${WORKDATE}_uninstaller.sh
 
 PARAM="${PARAM} ${CUST}"
 CMD+=" ${PARAM}"
@@ -558,7 +572,7 @@ setedition()
 {
 PARAM="--xt-edition"
 PS3="Set the xTuple Edition: "
-EDITIONS='enterprise standard postbooks'
+EDITIONS='manufacturing distribution enterprise standard postbooks'
 
 select EDITION in ${EDITIONS};
 do
@@ -624,12 +638,12 @@ CMD+=" ${PARAM}"
 
 makedns()
 {
-RT53JSON=${RT53DIR}/create_${XTCRMACCT}_rt53.json
+RT53JSON=${RT53DIR}/create_${XTCRMACCT}_${WORKDATE}_rt53.json
 cat << EOF > ${RT53JSON}
 { "Comment":"Create record for $XTCRMACCT on Route 53",  "Changes": [ {"Action": "CREATE", "ResourceRecordSet":  {  "Name": "${XTCRMACCT}.${XTDOMAIN}.", "Type": "CNAME", "TTL": 60, "ResourceRecords":  [ {"Value": "${AWSDNSALIAS}" } ] }  }  ] }
 EOF
 
-RT53JSON_DELETE=${RT53DIR}/delete_${XTCRMACCT}_rt53.json
+RT53JSON_DELETE=${RT53DIR}/delete_${XTCRMACCT}_${WORKDATE}_rt53.json
 cat << EOF > ${RT53JSON_DELETE}
 { "Comment":"Delete record for $XTCRMACCT on Route 53",  "Changes": [ {"Action": "DELETE", "ResourceRecordSet":  {  "Name": "${XTCRMACCT}.${XTDOMAIN}.", "Type": "CNAME", "TTL": 60, "ResourceRecords":  [ {"Value": "${AWSDNSALIAS}" } ] }  }  ] }
 EOF
@@ -737,9 +751,9 @@ FROM pkghead) as foo ORDER BY 1;"`
 
 makereport()
 {
-
-REPORT=$REPORTDIR/${CUST}_Report.log
+REPORT=$REPORTDIR/${CUST}_${WORKDATE}.log
 cat << EOF >> $REPORT
+
 Customer: ${CUST}
 Version: ${XTVER}
 Edition: ${EDITION}
@@ -755,8 +769,59 @@ Database: ${DB}
 
 ==Details for ${DB}==
 $XTDETAIL
-EOF
 
+==xTuple Server Command==
+$CMD
+
+EOF
+}
+
+addnote()
+{
+echo "Would you like to add a note to the report? [ Y ] to add."
+read ADDNOTE
+case ${ADDNOTE} in
+Y|y)
+vim $REPORT
+;;
+N|n|*)
+echo "nope"
+;;
+esac
+}
+
+
+
+getfortune()
+{
+FORTUNE=`which fortune`
+if [ -z $FORTUNE ]; then
+#nevermind
+true
+else
+FORTUNE=`fortune`
+cat << EOF >> $REPORT
+
+==Fortune==
+$FORTUNE
+
+EOF
+fi
+}
+
+mailreport()
+{
+MAILPRGM=`which mutt`
+if [ -z $MAILPRGM ]; then
+echo "Couldn't mail anything - no mailer."
+echo "Set up Mutt."
+true
+else
+MSUB="Mobile Instance loaded by xsInstaller for you on $HOSTNAME"
+MES="${REPORT}"
+
+$MAILPRGM -s "CloudOps Mobilized $DB for you on $HOSTNAME" $MTO < $MES
+fi
 }
 
 pre
@@ -787,6 +852,9 @@ runcmd
 startnode
 dbcleanup
 makereport
+addnote
+getfortune
+mailreport
 ;;
 *)
 echo "Not Gonna do it!"
