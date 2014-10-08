@@ -459,6 +459,7 @@ sleep 1
 select BACKUPNAME in $BKLIST;
 do
  echo "You picked $BACKUPNAME ($REPLY)"
+ ORIGDB=$BACKUPNAME
  CUSTDB=$BACKUPNAME
  break
 done
@@ -657,7 +658,8 @@ RT53ADD="aws route53 change-resource-record-sets --hosted-zone-id ${AWSZONEID} -
 RT53ADDCMD=`${RT53ADD}`
 
 RT53DEL="aws route53 change-resource-record-sets --hosted-zone-id ${AWSZONEID} --change-batch file://${RT53JSON_DELETE}"
-##RT53DELCMD=`RT53DEL`
+# Just write rt53 delete command to uninstall script, don't actually execute it...
+RT53DELCMD=${RT53DEL}
 
 echo ${RT53ADDCMD} > ${INSCRIPT}
 echo ${RT53DELCMD} > ${UNSCRIPT}
@@ -751,6 +753,8 @@ FROM pkghead) as foo ORDER BY 1;"`
 
 makereport()
 {
+EC2DATA=`ec2metadata --instance-id --local-ipv4 --public-ipv4 --availability-zone`
+
 REPORT=$REPORTDIR/${CUST}_${WORKDATE}.log
 cat << EOF >> $REPORT
 
@@ -768,10 +772,14 @@ Port: $CUSTPORT
 Database: ${DB}
 
 ==Details for ${DB}==
+DB linked to: ${ORIGDB}
 $XTDETAIL
 
 ==xTuple Server Command==
 $CMD
+
+==EC2Data==
+$EC2DATA
 
 EOF
 }
@@ -789,7 +797,6 @@ echo "nope"
 ;;
 esac
 }
-
 
 
 getfortune()
