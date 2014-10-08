@@ -6,6 +6,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 echo "Working dir is $DIR"
 
+TMOUT=15
+
 WORKDATE=`/bin/date "+%m%d%y_%s"`
 PLAINDATE=`date`
 
@@ -379,6 +381,17 @@ setcust
 else
 echo "Using $CUST"
 CUSTLOG=${CUSTLOGDIR}/${CUST}_${WORKDATE}.log
+echo "Enter Customer Email to send Customer Report to."
+echo "Just hit enter to use default: $MTO"
+read MTCUST
+
+  if [ -z $MTCUST ]; then
+   echo "Sending Customer Report email to $MTO."
+    MTCUST=$MTO
+  else
+   echo "Sending Customer Report to $MTCUST."
+  fi
+
 fi
 INSCRIPT=${SCRIPTDIR}/${CUST}_${WORKDATE}_installer.sh
 UNSCRIPT=${SCRIPTDIR}/${CUST}_${WORKDATE}_uninstaller.sh
@@ -632,7 +645,6 @@ then
 else
 echo "${XTFQDN} Does Not Exist  - creating"
 makedns
-dodns
 fi
 PARAM="${PARAM} ${XTFQDN}"
 CMD+=" ${PARAM}"
@@ -656,14 +668,15 @@ dodns()
 {
 echo "Adding DNS Record to Route53"
 RT53ADD="aws route53 change-resource-record-sets --hosted-zone-id ${AWSZONEID} --change-batch file://${RT53JSON}"
+# Do it.
 RT53ADDCMD=`${RT53ADD}`
 
 RT53DEL="aws route53 change-resource-record-sets --hosted-zone-id ${AWSZONEID} --change-batch file://${RT53JSON_DELETE}"
 # Just write rt53 delete command to uninstall script, don't actually execute it...
-RT53DELCMD=${RT53DEL}
+# RT53DELCMD=${RT53DEL}
 
-echo ${RT53ADDCMD} > ${INSCRIPT}
-echo ${RT53DELCMD} > ${UNSCRIPT}
+echo ${RT53ADD} >> ${INSCRIPT}
+echo ${RT53DEL} >> ${UNSCRIPT}
 
 }
 
@@ -733,6 +746,9 @@ fi
 
 
 $PGCMD -q < $SQLDIR/getpkgver.sql
+
+XTAPPVER=`$PGCMD -c "SELECT fetchmetrictext('ServerVersion');"`
+
 XTDETAIL=`$PGCMD -c \
 "SELECT data FROM ( \
 SELECT 1,'Co: '||fetchmetrictext('remitto_name') AS data \
@@ -741,6 +757,7 @@ SELECT 2,'Ap: '||fetchmetrictext('Application')||' v.'||fetchmetrictext('ServerV
 UNION \
 SELECT 4,'Pk: '||pkghead_name||':'||getpkgver(pkghead_name) \
 FROM pkghead) as foo ORDER BY 1;"`
+
 }
 
 makereport()
@@ -753,7 +770,7 @@ cat << EOF >> $REPORT
 Install Date: ${PLAINDATE}
 
 Customer: ${CUST}
-Version: ${XTVER}
+Mobile Version: ${XTVER}
 Edition: ${EDITION}
 
 MobileURL: $XTFQDN
@@ -761,6 +778,7 @@ AdminUser: $XTADMIN
 AdminPass: $XTPASS
 
 ==Desktop Client Information==
+Client Version: ${XTAPPVER}
 Server: $XTFQDN
 Port: $CUSTPORT
 Database: ${DB}
@@ -778,20 +796,43 @@ $EC2DATA
 EOF
 }
 
-addnote()
+makecustreport()
 {
-echo "Would you like to add a note to the report? [ Y ] to add."
-read ADDNOTE
-case ${ADDNOTE} in
-Y|y)
-vim $REPORT
-;;
-N|n|*)
-echo "nope"
-;;
-esac
-}
+EC2DATA=`ec2metadata --instance-id --local-ipv4 --public-ipv4 --availability-zone`
 
+CUSTREPORT=$REPORTDIR/${CUST}_report_${WORKDATE}.log
+
+cat << EOF >> $CUSTREPORT
+Hello,
+
+We have loaded a database for you in xTuple Cloud.
+
+Please login with the following information.
+
+For Mobile Web point your web browser to:
+http://${XTFQDN}
+And login with: 
+User: $XTADMIN
+Pass: $XTPASS
+
+For xTuple Desktop:
+
+Client Version: ${XTAPPVER}
+Edition: ${EDITION}
+
+Server: $XTFQDN
+Port: $CUSTPORT
+Database: ${DB}
+User: $XTADMIN
+Pass: $XTPASS
+
+Mobile Version: ${XTVER}
+
+==Details for ${DB}==
+$XTDETAIL
+
+EOF
+}
 
 getfortune()
 {
@@ -810,6 +851,21 @@ EOF
 fi
 }
 
+addnote()
+{
+echo "Would you like to add a note to the report? [ Y ] to add."
+read ADDNOTE
+case ${ADDNOTE} in
+Y|y)
+${EDITOR} $REPORT
+;;
+N|n|*)
+echo "nope"
+;;
+esac
+}
+
+
 mailreport()
 {
 MAILPRGM=`which mutt`
@@ -822,6 +878,21 @@ MSUB="Mobile Instance loaded by xsInstaller for you on $HOSTNAME"
 MES="${REPORT}"
 
 $MAILPRGM -s "CloudOps Mobilized $DB for you on $HOSTNAME" $MTO < $MES
+fi
+}
+
+mailcustreport()
+{
+MAILPRGM=`which mutt`
+if [ -z $MAILPRGM ]; then
+echo "Couldn't mail anything - no mailer."
+echo "Set up Mutt."
+true
+else
+MSUB="Your Mobile Instance details for $XTFQDN"
+MES="${CUSTREPORT}"
+
+$MAILPRGM -s "Your Mobile Instance details for $XTFQDN" $MTCUST < $MES
 fi
 }
 
@@ -852,10 +923,13 @@ echo "Ok, Running..."
 runcmd
 startnode
 dbcleanup
+dodns
 makereport
-addnote
 getfortune
+makecustreport
+addnote
 mailreport
+mailcustreport
 ;;
 *)
 echo "Not Gonna do it!"
