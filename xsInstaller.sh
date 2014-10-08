@@ -7,6 +7,7 @@ cd $DIR
 echo "Working dir is $DIR"
 
 WORKDATE=`/bin/date "+%m%d%y_%s"`
+PLAINDATE=`date`
 
 enviro()
 {
@@ -681,15 +682,6 @@ echo "
 Here is your Command Preview:
 ${CMD}"
 
-#sudo xtuple-server install-${TYPE}
-#--xt-name ${CUST} --xt-version ${XTVER} --xt-edition enterprise
-#--xt-ghuser ${GHUSER} --xt-ghpass ${GHPASS} --xt-maindb ${CUSTDB}
-#--xt-authkey xTuple --xt-adminpw ${XTPASS}
-#--nginx-domain ${XTFQDN}
-#--nginx-incrt ${CERT}
-#--nginx-inkey ${KEY}
-#--pg-worldlogin --pg-version 9.3"
-
 #INSTALLCMD="sudo xtuple-server install-${TYPE} --xt-name ${CUST} --xt-version ${XTVER} --xt-edition ${EDITION} --xt-ghuser ${GHUSER} --xt-ghpass ${GHPASS} --xt-maindb ${CUSTDB} --xt-authkey xTuple --xt-adminpw ${XTPASS} --nginx-domain ${XTFQDN}  --nginx-incrt ${CERT} --nginx-inkey ${KEY}  --pg-worldlogin --pg-version 9.3"
 UNINSTALLCMD="sudo xtuple-server uninstall-${TYPE} --xt-name ${CUST} --xt-version ${XTVER} --xt-edition ${EDITION} --xt-adminpw ${XTPASS} --nginx-domain ${XTFQDN} --pg-version 9.3"
 
@@ -757,6 +749,8 @@ EC2DATA=`ec2metadata --instance-id --local-ipv4 --public-ipv4 --availability-zon
 
 REPORT=$REPORTDIR/${CUST}_${WORKDATE}.log
 cat << EOF >> $REPORT
+
+Install Date: ${PLAINDATE}
 
 Customer: ${CUST}
 Version: ${XTVER}
