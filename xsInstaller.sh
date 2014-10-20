@@ -6,7 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 echo "Working dir is $DIR"
 
-TMOUT=15
+#TMOUT=15
 
 WORKDATE=`/bin/date "+%m%d%y_%s"`
 PLAINDATE=`date`
@@ -292,9 +292,11 @@ if [ -e $SETS ]
    AWSDNSALIAS=`grep AWSDNSALIAS ${SETS} | cut -d':' -f2`
    AWSZONEID=`grep AWSZONEID ${SETS} | cut -d':' -f2`
    MTO=`grep MTO ${SETS} | cut -d':' -f2`
+   MFROM=`grep MFROM ${SETS} | cut -d':' -f2`
 
-export EMAIL=xsinstaller@${AWSDNSALIAS}
-
+#export EMAIL=xsinstaller@${AWSDNSALIAS}
+export EMAIL=${MFROM}
+set from=${MFROM}
 
 echo "Using: $XTDOMAIN $AWSDNSALIAS $AWSZONEID, sending emails to ${MTO}"
  else 
@@ -442,7 +444,7 @@ setver()
 {
 PARAM="--xt-version"
 PS3="Select an xTuple Version: "
-TAGS=`git ls-remote --tags git://github.com/xtuple/xtuple.git | tail -10 | cut -d '/' -f 3 | cut -d v -f2`
+TAGS=`git ls-remote --tags git://github.com/xtuple/xtuple.git | tail -20 | cut -d '/' -f 3 | cut -d v -f2`
 
 select XTVER in ${TAGS};
 do
@@ -499,20 +501,25 @@ read NEWDBNAME
 DBEXT='bak'
 
 if [ -z  $NEWDBNAME ]; then
-
 NEWDBNAME=${CUST}.${DBEXT}
 ln -s ${CUSTDB} ${MIG}/${NEWDBNAME}
 CUSTDB=${MIG}/${NEWDBNAME}
+DB=${CUST}
 else
 NEWDBNAME=${NEWDBNAME}.${DBEXT}
 ln -s ${CUSTDB} ${MIG}/${NEWDBNAME}
 CUSTDB=${MIG}/${NEWDBNAME}
+DB=$NEWDBNAME
 fi
 echo "$CUSTDB Symlinked "
 echo "using $NEWDBNAME as template"
 PARAM="${PARAM} ${CUSTDB}"
 echo "${PARAM}"
 CMD+=" ${PARAM}"
+
+echo ${DB}_${TYPE}
+echo $NEWDBNAME
+echo $CUSTDB
 }
 
 
@@ -731,8 +738,8 @@ dbcleanup()
 {
 NEWPORTLIST=`pg_lsclusters -h`
 CUSTPORT=`echo "$NEWPORTLIST" | sed "s/^ *//;s/ *$//;s/ \{1,\}/ /g" | grep $XTCRMACCT | cut -d' ' -f3`
+DB=${DB}_${TYPE}
 
-DB=${CUST}_${TYPE}
 PGCMD="psql -At -U ${XTADMIN} -p ${CUSTPORT} ${DB} "
 
 echo "Adding All Extensions to admin user"
