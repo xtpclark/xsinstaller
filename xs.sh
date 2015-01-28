@@ -70,7 +70,7 @@ fi
 setup()
 {
 
-DEPS='awscli jq s3cmd wget pwgen tree'
+DEPS='awscli jq s3cmd wget pwgen tree python-magic'
 DIRS='planin xtupledb route53 report scripts certs logs mail custlogs sql ini global'
 
 #Setup Directories
