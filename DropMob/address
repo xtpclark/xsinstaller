@@ -1,0 +1,200 @@
+﻿-- View: address
+
+-- DROP VIEW address;
+
+CREATE OR REPLACE VIEW address AS 
+ SELECT addresses.addr_id,
+    addresses.addr_active,
+    addresses.addr_line1,
+    addresses.addr_line2,
+    addresses.addr_line3,
+    addresses.addr_city,
+    addresses.addr_state,
+    addresses.addr_postalcode,
+    addresses.addr_country,
+    addresses.addr_notes,
+    addresses.addr_number,
+    addresses.crmacct_id,
+    addresses.crmacct_number,
+    addresses.crmacct_name
+   FROM ( SELECT base.addr_id,
+            base.addr_active,
+            base.addr_line1,
+            base.addr_line2,
+            base.addr_line3,
+            base.addr_city,
+            base.addr_state,
+            base.addr_postalcode,
+            base.addr_country,
+            base.addr_notes,
+            base.addr_number,
+            base.crmacct_id,
+            base.crmacct_number,
+            base.crmacct_name
+           FROM ( SELECT addr.addr_id,
+                    addr.addr_active,
+                    addr.addr_line1,
+                    addr.addr_line2,
+                    addr.addr_line3,
+                    addr.addr_city,
+                    addr.addr_state,
+                    addr.addr_postalcode,
+                    addr.addr_country,
+                    addr.addr_notes,
+                    addr.addr_number,
+                    COALESCE(crmacct.crmacct_id, (-1)) AS crmacct_id,
+                    crmacct.crmacct_number,
+                    crmacct.crmacct_name
+                   FROM addr
+                     LEFT JOIN cntct ON cntct.cntct_addr_id = addr.addr_id
+                     LEFT JOIN crmacct ON crmacct.crmacct_id = cntct.cntct_crmacct_id
+                EXCEPT
+                 SELECT addr.addr_id,
+                    addr.addr_active,
+                    addr.addr_line1,
+                    addr.addr_line2,
+                    addr.addr_line3,
+                    addr.addr_city,
+                    addr.addr_state,
+                    addr.addr_postalcode,
+                    addr.addr_country,
+                    addr.addr_notes,
+                    addr.addr_number,
+                    (-1),
+                    NULL::text AS text,
+                    NULL::text AS text
+                   FROM addr
+                     JOIN vendinfo ON vendinfo.vend_addr_id = addr.addr_id
+                     JOIN crmacct ON vendinfo.vend_id = crmacct.crmacct_vend_id
+                EXCEPT
+                 SELECT addr.addr_id,
+                    addr.addr_active,
+                    addr.addr_line1,
+                    addr.addr_line2,
+                    addr.addr_line3,
+                    addr.addr_city,
+                    addr.addr_state,
+                    addr.addr_postalcode,
+                    addr.addr_country,
+                    addr.addr_notes,
+                    addr.addr_number,
+                    (-1),
+                    NULL::text AS text,
+                    NULL::text AS text
+                   FROM addr
+                     JOIN vendaddrinfo ON vendaddrinfo.vendaddr_addr_id = addr.addr_id
+                     JOIN crmacct ON vendaddrinfo.vendaddr_vend_id = crmacct.crmacct_vend_id
+                EXCEPT
+                 SELECT addr.addr_id,
+                    addr.addr_active,
+                    addr.addr_line1,
+                    addr.addr_line2,
+                    addr.addr_line3,
+                    addr.addr_city,
+                    addr.addr_state,
+                    addr.addr_postalcode,
+                    addr.addr_country,
+                    addr.addr_notes,
+                    addr.addr_number,
+                    (-1),
+                    NULL::text AS text,
+                    NULL::text AS text
+                   FROM addr
+                     JOIN taxauth ON taxauth.taxauth_addr_id = addr.addr_id
+                     JOIN crmacct ON taxauth.taxauth_id = crmacct.crmacct_taxauth_id
+                EXCEPT
+                 SELECT addr.addr_id,
+                    addr.addr_active,
+                    addr.addr_line1,
+                    addr.addr_line2,
+                    addr.addr_line3,
+                    addr.addr_city,
+                    addr.addr_state,
+                    addr.addr_postalcode,
+                    addr.addr_country,
+                    addr.addr_notes,
+                    addr.addr_number,
+                    (-1),
+                    NULL::text AS text,
+                    NULL::text AS text
+                   FROM addr
+                     JOIN shiptoinfo ON shiptoinfo.shipto_addr_id = addr.addr_id
+                     JOIN crmacct ON shiptoinfo.shipto_cust_id = crmacct.crmacct_cust_id) base
+        UNION
+         SELECT addr.addr_id,
+            addr.addr_active,
+            addr.addr_line1,
+            addr.addr_line2,
+            addr.addr_line3,
+            addr.addr_city,
+            addr.addr_state,
+            addr.addr_postalcode,
+            addr.addr_country,
+            addr.addr_notes,
+            addr.addr_number,
+            crmacct.crmacct_id,
+            crmacct.crmacct_number,
+            crmacct.crmacct_name
+           FROM addr
+             JOIN vendinfo ON vendinfo.vend_addr_id = addr.addr_id
+             JOIN crmacct ON vendinfo.vend_id = crmacct.crmacct_vend_id
+        UNION
+         SELECT addr.addr_id,
+            addr.addr_active,
+            addr.addr_line1,
+            addr.addr_line2,
+            addr.addr_line3,
+            addr.addr_city,
+            addr.addr_state,
+            addr.addr_postalcode,
+            addr.addr_country,
+            addr.addr_notes,
+            addr.addr_number,
+            crmacct.crmacct_id,
+            crmacct.crmacct_number,
+            crmacct.crmacct_name
+           FROM addr
+             JOIN vendaddrinfo ON vendaddrinfo.vendaddr_addr_id = addr.addr_id
+             JOIN crmacct ON vendaddrinfo.vendaddr_vend_id = crmacct.crmacct_vend_id
+        UNION
+         SELECT addr.addr_id,
+            addr.addr_active,
+            addr.addr_line1,
+            addr.addr_line2,
+            addr.addr_line3,
+            addr.addr_city,
+            addr.addr_state,
+            addr.addr_postalcode,
+            addr.addr_country,
+            addr.addr_notes,
+            addr.addr_number,
+            crmacct.crmacct_id,
+            crmacct.crmacct_number,
+            crmacct.crmacct_name
+           FROM addr
+             JOIN taxauth ON taxauth.taxauth_addr_id = addr.addr_id
+             JOIN crmacct ON taxauth.taxauth_id = crmacct.crmacct_taxauth_id
+        UNION
+         SELECT addr.addr_id,
+            addr.addr_active,
+            addr.addr_line1,
+            addr.addr_line2,
+            addr.addr_line3,
+            addr.addr_city,
+            addr.addr_state,
+            addr.addr_postalcode,
+            addr.addr_country,
+            addr.addr_notes,
+            addr.addr_number,
+            crmacct.crmacct_id,
+            crmacct.crmacct_number,
+            crmacct.crmacct_name
+           FROM addr
+             JOIN shiptoinfo ON shiptoinfo.shipto_addr_id = addr.addr_id
+             JOIN crmacct ON shiptoinfo.shipto_cust_id = crmacct.crmacct_cust_id) addresses
+  ORDER BY addresses.addr_country, addresses.addr_state, addresses.addr_postalcode, addresses.addr_line1, addresses.addr_line2, addresses.addr_line3;
+
+ALTER TABLE address
+  OWNER TO admin;
+GRANT ALL ON TABLE address TO admin;
+GRANT ALL ON TABLE address TO xtrole;

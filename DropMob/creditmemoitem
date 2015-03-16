@@ -1,0 +1,43 @@
+﻿-- View: creditmemoitem
+
+-- DROP VIEW creditmemoitem;
+
+CREATE OR REPLACE VIEW creditmemoitem AS 
+ SELECT cmitem.cmitem_id,
+    cmitem.cmitem_cmhead_id,
+    cmitem.cmitem_linenumber,
+    cmitem.cmitem_itemsite_id,
+    cmitem.cmitem_qtycredit,
+    cmitem.cmitem_qtyreturned,
+    cmitem.cmitem_unitprice,
+    cmitem.cmitem_comments,
+    cmitem.cmitem_rsncode_id,
+    cmitem.cmitem_taxtype_id,
+    cmitem.cmitem_qty_uom_id,
+    cmitem.cmitem_qty_invuomratio,
+    cmitem.cmitem_price_uom_id,
+    cmitem.cmitem_price_invuomratio,
+    cmitem.cmitem_raitem_id,
+    cmitem.cmitem_updateinv,
+    itemsite.itemsite_item_id AS item_id,
+    COALESCE(cmitem.cmitem_qtycredit * cmitem.cmitem_qty_invuomratio, 0::numeric) AS qty,
+    COALESCE(cmitem.cmitem_unitprice / cmitem.cmitem_price_invuomratio, 0::numeric) AS unitprice,
+    COALESCE(round(cmitem.cmitem_qtycredit * cmitem.cmitem_qty_invuomratio * (cmitem.cmitem_unitprice / cmitem.cmitem_price_invuomratio), 2), 0::numeric) AS extprice,
+    currtobase(cmhead.cmhead_curr_id, COALESCE(round(cmitem.cmitem_qtycredit * cmitem.cmitem_qty_invuomratio * (cmitem.cmitem_unitprice / cmitem.cmitem_price_invuomratio), 2), 0::numeric), cmhead.cmhead_docdate) AS baseextprice,
+    ( SELECT COALESCE(sum(cmitemtax.taxhist_tax), 0::numeric) AS "coalesce"
+           FROM cmitemtax
+          WHERE cmitemtax.taxhist_parent_id = cmitem.cmitem_id) AS tax,
+        CASE
+            WHEN itemsite.itemsite_costmethod = 'A'::bpchar THEN avgcost(itemsite.itemsite_id)
+            ELSE stdcost(itemsite.itemsite_item_id)
+        END AS unitcost
+   FROM cmitem
+     JOIN cmhead ON cmhead.cmhead_id = cmitem.cmitem_cmhead_id
+     LEFT JOIN itemsite ON itemsite.itemsite_id = cmitem.cmitem_itemsite_id;
+
+ALTER TABLE creditmemoitem
+  OWNER TO admin;
+GRANT ALL ON TABLE creditmemoitem TO admin;
+GRANT ALL ON TABLE creditmemoitem TO xtrole;
+COMMENT ON VIEW creditmemoitem
+  IS 'Single point for credit memo item (cmitem) calculations.';
