@@ -392,7 +392,7 @@ drop view if exists xt.share_users;
 drop view if exists xm.share_users;
 drop view if exists xm.address;
 drop view if exists xm.vendor_list_item;
-drop view if exists xm.invoice depends;
+drop view if exists xm.invoice;
 drop view if exists xm.invoice_list_item;
 
 drop view if exists xt.coheadinfo;
@@ -1814,6 +1814,25 @@ drop function if exists xt.generate_uuid();
 drop table if exists xt.obj;
 -- drop function if exists xtstd.to_line_at_shipping(toitem) 
 -- drop function if exists xtstd.to_line_ship_balance(toitem)
+-- 4.8.x Additions
+DROP view xt.share_users_cust_cntct ;
+DROP view xt.share_users_cust_cntct ;
+DROP view xt.share_users_cust_cntct ;
+DROP view xm.document_association ;
+DROP view xt.doc ;
+DROP view xm.document_association ;
+DROP view xt.share_users_cust_cntct ;
+DROP view xt.share_users_cust_cntct ;
+DROP view xm.document_association ;
+DROP view xm.printer ;
+DROP view xt.doc ;
+DROP view xm.document_association ;
+DROP view xm.printer ;
+DROP view xt.crmacct_users ;
+DROP view xt.share_users_cust_cntct ;
+
+
+
 
 DROP SCHEMA sys;
 DROP SCHEMA xm;
