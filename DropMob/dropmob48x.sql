@@ -1831,7 +1831,44 @@ DROP view xm.printer ;
 DROP view xt.crmacct_users ;
 DROP view xt.share_users_cust_cntct ;
 
-
+DROP trigger printer_did_change on xt.printer ;
+DROP trigger printer_did_change on xt.printer ;
+DROP function xt.uuid_generate_v4() ;
+DROP function xt.createwf_after_insert() ;
+DROP trigger prjwf_after_insert on prj ;
+DROP trigger sowf_after_insert on cohead ;
+DROP function xt.grant_user_ext(text,text) ;
+DROP function xt.grant_user_priv(text,text,text) ;
+DROP function xt.record_did_change() ;
+DROP function xt.refresh_addr_share_users_cache() ;
+DROP trigger addr_share_users_cache on addr ;
+DROP function xt.refresh_cache_share_users_obj(uuid) ;
+DROP function xt.refresh_cache_share_users_user(text) ;
+DROP function xt.refresh_cntct_share_users_cache() ;
+DROP trigger cntct_share_users_cache on cntct ;
+DROP function xt.refresh_cohead_share_users_cache() ;
+DROP trigger cohead_share_users_cache on cohead ;
+DROP function xt.refresh_crmacct_share_users_cache() ;
+DROP trigger crmacct_share_users_cache on crmacct ;
+DROP function xt.refresh_custinfo_share_users_cache() ;
+DROP trigger custinfo_share_users_cache on custinfo ;
+DROP function xt.refresh_invchead_share_users_cache() ;
+DROP trigger invchead_share_users_cache on invchead ;
+DROP function xt.refresh_obj_share_cache() ;
+DROP function xt.refresh_share_user_cache() ;
+DROP function xt.refresh_shiptoinfo_share_users_cache() ;
+DROP trigger shiptoinfo_share_users_cache on shiptoinfo ;
+DROP function xt.workflow_inheritsource(text,text,uuid,integer) ;
+DROP table xt.cache_share_users ;
+DROP table xt.printer ;
+DROP function xt.createwf_after_insert() ;
+DROP function xt.refresh_addr_share_users_cache() ;
+DROP function xt.refresh_cntct_share_users_cache() ;
+DROP function xt.refresh_cohead_share_users_cache() ;
+DROP function xt.refresh_crmacct_share_users_cache() ;
+DROP function xt.refresh_custinfo_share_users_cache() ;
+DROP function xt.refresh_invchead_share_users_cache() ;
+DROP function xt.refresh_shiptoinfo_share_users_cache(); 
 
 
 DROP SCHEMA sys;
