@@ -1,10 +1,10 @@
-drop view if exists xm.distribution;
+﻿drop view if exists xm.distribution;
 drop view if exists xm.distributioninfo;
 drop view if exists xm.bill_of_material;
 drop view if exists xm.bill_of_material_item;
 drop view if exists xt.bomiteminfo;
 drop view if exists xm.routing_operation;
-drop view if exists xt.share_users_shipto_cust;
+--drop view if exists xt.share_users_shipto_cust;
 drop view if exists xt.crmacct_users;
 
 drop view if exists xm.planner_code			;
@@ -247,8 +247,8 @@ drop trigger recv_item_did_change on recv;
 drop trigger pr_did_change on pr;
 drop trigger wo_did_change on wo;
 drop trigger lbrrate_did_change on xtmfg.lbrrate;
-drop trigger stdopn_did_change on table xtmfg.stdopn;
-drop trigger wrkcnt_did_change on table xtmfg.wrkcnt;
+drop trigger stdopn_did_change on xtmfg.stdopn;
+drop trigger wrkcnt_did_change on xtmfg.wrkcnt;
 drop function xt.shipment_value(integer);
 drop function xt.to_freight_weight(tohead);
 drop function xt.to_line_at_shipping(toitem);
@@ -1028,7 +1028,7 @@ drop function xt.customer_did_change();
 drop function if exists xt.itemsrc_did_change() ;
 drop function if exists xt.obj_type_did_change() ;
 drop function if exists xt.record_did_change() ;
-drop function if exists xt.register_extension_;
+drop function if exists xt.register_extension();
 drop function if exists xt.sales_order_did_change() ;
 drop function if exists xt.add_comment_type(text,text,text);
 drop function if exists xt.create_schema(text);
@@ -1126,7 +1126,7 @@ drop function if exists xt.obj_type_did_change() ;
 drop function if exists xt.po_line_extended_price(poitem) ;
 drop function if exists xt.po_line_tax(poitem) ;
 drop function if exists xt.record_did_change() ;
-drop function if exists xt.register_extension_;
+drop function if exists xt.register_extension();
 drop function if exists xt.sales_order_did_change() ;
 
 
