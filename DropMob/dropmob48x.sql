@@ -80,7 +80,7 @@ drop view if exists xm.quote_line_characteristic;
 drop view if exists xm.sales_order_line_characteristic;
 alter table charass no inherit xt.obj;
 alter table charass drop column obj_uuid;
-
+ alter table bi_open.usrbichart drop column obj_uuid;
 
 
 -- cleanup alarm
@@ -1924,6 +1924,58 @@ drop view if exists xt.teprjtaskinfo;
 drop view if exists xm.project_task_relation;
 drop view if exists xt.teprjinfo;
 drop view if exists xm.worksheet_project_relation;
+drop view if exists xt.cntctinfo                       ;
+drop view if exists xt.emlprofile                      ;
+drop view if exists xt.emlprofile_emlprofile_id_seq    ;
+drop view if exists xt.emlprofile_pkey                 ;
+drop view if exists xt.invcharext                      ;
+drop view if exists xt.invcharext_pkey                 ;
+drop view if exists xt.itemsitedtl                     ;
+drop view if exists xt.locationdtl                     ;
+drop view if exists xt.obj                             ;
+drop view if exists xt.site                            ;
+drop view if exists xt.siteemlprofile                  ;
+drop view if exists xt.sitetypeext;
+drop view if exists xt.sitetypewf;
+drop view if exists xt.usrlite;
+drop view if exists xt.wfsrc;
+
+drop view if exists xm.address_info                  ;
+drop view if exists xm.characteristic                ;
+drop view if exists xm.characteristic_option         ;
+drop view if exists xm.class_code                    ;
+drop view if exists xm.contact_relation              ;
+drop view if exists xm.freight_class                 ;
+drop view if exists xm.item_relation                 ;
+drop view if exists xm.item_relation_alias           ;
+drop view if exists xm.item_relation_characteristic  ;
+drop view if exists xm.location_inventory_relation   ;
+drop view if exists xm.location_relation             ;
+drop view if exists xm.location_target_relation      ;
+drop view if exists xm.operation_type                ;
+drop view if exists xm.priority;
+drop view if exists xm.relocate_inventory;
+drop view if exists xm.scrap_transaction;
+drop view if exists xm.ship_via;
+drop view if exists xm.site_email_profile;
+drop view if exists xm.site_relation;
+drop view if exists xm.site_type;
+drop view if exists xm.site_type_characteristic;
+drop view if exists xm.site_type_workflow;
+drop view if exists xm.tax_zone;
+drop view if exists xm.trace_relation;
+drop view if exists xm.unit;
+drop view if exists xm.user_account_relation;
+drop trigger if exists towf_after_insert on tohead;
+drop trigger if exists wowf_after_insert on wo;
+
+drop trigger if exists opntype_did_change on xtmfg.opntype;
+drop trigger if exists shiphead_share_users_cache on shiphead;
+drop function if exists xt.createwf_after_insert();
+drop function if exists xt.record_did_change();
+
+drop function if exists xt.refresh_shiphead_share_users_cache();
+drop function if exists xt.uuid_generate_v4();
 
 
 
